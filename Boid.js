@@ -31,15 +31,25 @@ export default class Boid{
         const v = ((x*x + y*y) ** -0.5) * m;
         return [x * v, y * v];
     }
-    move(){
-        if(this.length(this.velX,this.velY) > this.maxSpeed){
-            this.velX = this.setMagnitude(this.velX, this.velY, this.maxSpeed)[0];
-            this.velY = this.setMagnitude(this.velX, this.velY, this.maxSpeed)[1];
+    move(deltaTime = 1) {
+        // Scale velocity and acceleration by deltaTime
+        let scaledVelX = this.velX * deltaTime;
+        let scaledVelY = this.velY * deltaTime;
+        let scaledAccX = this.accX * deltaTime;
+        let scaledAccY = this.accY * deltaTime;
+    
+        // Limit velocity to max speed
+        if (this.length(scaledVelX, scaledVelY) > this.maxSpeed) {
+            [scaledVelX, scaledVelY] = this.setMagnitude(scaledVelX, scaledVelY, this.maxSpeed);
         }
-        this.x+=this.velX;
-        this.y+=this.velY;
-        this.velX += this.accX;
-        this.velY += this.accY;
+    
+        // Update position based on scaled velocity
+        this.x += scaledVelX;
+        this.y += scaledVelY;
+    
+        // Apply acceleration
+        this.velX += scaledAccX;
+        this.velY += scaledAccY;
     }
     flock(boids, obstacles, a, c, s){
         const align = this.alignment(boids,a);

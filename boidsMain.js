@@ -37,7 +37,15 @@ function init(){
     window.requestAnimationFrame(update);
 }
 
+
+let lastTime = performance.now();  // Track the last frame time
+
 function update(){
+    let now = performance.now();
+    let deltaTime = (now - lastTime) / 16.67; // Normalize to 60 FPS baseline
+    lastTime = now;
+
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     width = canvas.width;
@@ -58,7 +66,7 @@ function update(){
     ctx.clearRect(0,0,width,height);
     for (let b of boids){
         drawBoid(b);
-        b.move();
+        b.move(deltaTime);
         b.flock(boids, obstacles, 1.2,1,1.05);
         b.x = ((b.x % width) + width) % width
         b.y = ((b.y % height) + height) % height
@@ -78,7 +86,6 @@ function drawObstacle(o){
 }
 function drawBoid(b){
     let size = Math.min(5,Math.max((width + height)*0.0025,3));
-    console.log(size);
     var angle = Math.atan(b.velY/b.velX)+Math.PI;
     if(b.velX<0){
         angle = Math.PI + angle;
@@ -120,7 +127,11 @@ function drawBoid(b){
         ctx.fillStyle = "rgb(255 255 255)";
         ctx.fillRect(b.x-2,b.y-2,4,4);
     }
+    
+    
+
 }
+
 window.onscroll = function(e) {
     for(let b of boids){
         if (Math.random()>0.7){
