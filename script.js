@@ -30,15 +30,16 @@ document.addEventListener("scroll", () => {
   name.style.color = 'transparent';  
 
   // Calculate opacity based on scroll position
-  const opacity = Math.max(0, (1 - currentScroll / maxScroll));
+  let opacity = Math.max(0, (1 - currentScroll / maxScroll));
 
   // Add parallax effect to project items
   const scrollY = window.scrollY;
   projectItems.forEach((item, index) => {
     const speed = 0.1 + (index % 4) * 0.05;
     if (window.innerWidth >= 800) {
+      let _opacity = Math.min(1 - opacity * 1.5,0.95) //force it to be a little transparent
       item.style.transform = `translateY(${scrollY * speed}px)`;
-      item.style.opacity = 1 - opacity * 1.5;
+      item.style.opacity = _opacity;
     }
   });
 
@@ -47,6 +48,16 @@ document.addEventListener("scroll", () => {
     scrollIndicator.style.opacity = opacity;
   }
 });
+
+
+if (/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor)) {
+  chrome = true;
+  document.querySelectorAll("#name span").forEach(span => {
+    span.style.transition = "none";
+    span.style.transform = "none";
+    span.onmouseenter = null;
+  });
+}
 
 // Name animation logic
 const letters = document.querySelector("#name a");
