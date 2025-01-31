@@ -36,10 +36,10 @@ document.addEventListener("scroll", () => {
   const scrollY = window.scrollY;
   projectItems.forEach((item, index) => {
     const speed = 0.1 + (index % 4) * 0.05;
+    let _opacity = Math.min(1 - opacity * 1.5,0.95) //force it to be a little transparent
+    item.style.opacity = _opacity;
     if (window.innerWidth >= 800) {
-      let _opacity = Math.min(1 - opacity * 1.5,0.95) //force it to be a little transparent
       item.style.transform = `translateY(${scrollY * speed}px)`;
-      item.style.opacity = _opacity;
     }
   });
 
