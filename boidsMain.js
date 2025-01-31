@@ -42,7 +42,7 @@ let lastTime = performance.now();  // Track the last frame time
 
 function update(){
     let now = performance.now();
-    let deltaTime = (now - lastTime) / 16.67; // Normalize to 60 FPS baseline
+    let deltaTime = Math.min((now - lastTime) / 16.67,2); // Normalize to 60 FPS baseline
     lastTime = now;
 
 
