@@ -12,12 +12,13 @@ body {
   font-family: 'Fira Code', monospace;
   overflow-x: hidden; /* Prevent horizontal overflow */
   margin: 0;
+  user-select: none;
 }
 
 body::after {
   content: '';
   display: block;
-  height: 50vh; /* Add extra scrollable space equal to viewport height */
+  height: 30vh; /* Add extra scrollable space equal to viewport height */
 }
 a{
   text-decoration: none;/* Remove underline for links */
@@ -185,6 +186,7 @@ main {
 }
 
 /* Project item styling */
+
 .project-item {
   background-color: #1E262E;
   color: #E2E3E4;
