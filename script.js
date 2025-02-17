@@ -3,6 +3,28 @@ window.addEventListener("load", () => {
   window.scrollTo(0, 0);
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const projectItems = document.querySelectorAll('.project-item');
+  const projectGrid = document.querySelector('.project-grid'); // Get the parent
+
+  projectItems.forEach(item => {
+      item.addEventListener('mouseenter', () => {
+          // Add the blur-siblings class to the parent
+          projectGrid.classList.add('blur-siblings');
+          // Add the no-blur class to the HOVERED item
+          item.classList.add('no-blur');
+      });
+
+      item.addEventListener('mouseleave', () => {
+          // Remove the blur-siblings class from the parent
+          projectGrid.classList.remove('blur-siblings');
+          // Remove the no-blur class from the item that was hovered
+          item.classList.remove('no-blur');
+      });
+  });
+});
+
+
 // Handle scroll events
 document.addEventListener("scroll", () => {
   const projectsSection = document.getElementById("projects");
@@ -50,14 +72,13 @@ document.addEventListener("scroll", () => {
 });
 
 
-if (/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor)) {
-  chrome = true;
+/*if (/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor)) {
   document.querySelectorAll("#name span").forEach(span => {
     span.style.transition = "none";
     span.style.transform = "none";
     span.onmouseenter = null;
   });
-}
+}*/
 
 // Name animation logic
 const letters = document.querySelector("#name a");
