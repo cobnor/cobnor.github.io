@@ -2,12 +2,13 @@
 window.addEventListener("load", () => {
   window.scrollTo(0, 0);
 });
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 document.addEventListener('DOMContentLoaded', () => {
   const projectItems = document.querySelectorAll('.project-item');
   const projectGrid = document.querySelector('.project-grid'); // Get the parent
-
-  projectItems.forEach(item => {
+  if (!isMobile){
+    projectItems.forEach(item => {
       item.addEventListener('mouseenter', () => {
           // Add the blur-siblings class to the parent
           projectGrid.classList.add('blur-siblings');
@@ -21,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // Remove the no-blur class from the item that was hovered
           item.classList.remove('no-blur');
       });
-  });
+    });
+  }
 });
 
 
@@ -123,7 +125,6 @@ for (const child of letters.children) {
 // Mobile-specific tap animation
 const introSection = document.getElementById('intro');
 const nameLink = document.querySelector('#intro h1 a');
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 // Trigger animation on mobile when tapping outside the name link
 if (isMobile) {
