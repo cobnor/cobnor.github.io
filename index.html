@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" /> <!-- Compatibility with older IE versions -->
   <title>Connor Stevens</title>
-  <link rel="icon" href="https://avatars.githubusercontent.com/u/45150895"> <!--Take icon from my github page-->
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/45150895">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
@@ -21,69 +21,77 @@
   <canvas id="boidsCanvas"></canvas>
 <!------------------------------------------------------------->
 
-  <header>
-    <nav>
-      <ul>
-        <li><a href="#projects">Projects</a></li>
-        <li><a>Contact</a></li>
-      </ul>
-    </nav>
-  </header>
+    <header>
+      <nav>
+        <ul>
+          <li><a href="#projects">Projects</a></li>
+          <li><a>Contact</a></li>
+        </ul>
+      </nav>
+    </header>
 
-  <main>
-    <section id="intro">
-      <h1 id="name">
-        <a href="https://github.com/cobnor" target="_blank">
-          <span id="letter1">C</span>
-          <span id="letter2">o</span>
-          <span id="letter3">n</span>
-          <span id="letter4">n</span>
-          <span id="letter5">o</span>
-          <span id="letter6">r</span>
-          <span id="letter7">&nbsp</span>
-          <span id="letter8">S</span>
-          <span id="letter9">t</span>
-          <span id="letter10">e</span>
-          <span id="letter11">v</span>
-          <span id="letter12">e</span>
-          <span id="letter13">n</span>
-          <span id="letter14">s</span>
-        </a>
-      </h1> 
-      <p id="bio">Welcome to my portfolio. I'm a creative programmer studying Computer Science & Philosophy at Oxford, interested in AI safety.</p>
-      <div class="scroll-down">
-        <div class="arrow"></div>
-      </div>
-    </section>
-    <section id="projects">
-      <h2>Projects</h2>
-      <div class="project-grid">
-        <a class="project-item" id="datdp-btn" href="https://www.researchgate.net/publication/388555790_Defense_Against_the_Dark_Prompts_Mitigating_Best-of-N_Jailbreaking_with_Prompt_Evaluation">
-          <h3>Defense Against The Dark Prompts</h3>
-          <p>Mitigating Best-of-N Jailbreaking with prompt evaluation.</p>
-        </a>
-        <a class="project-item" id="verlet-btn" href="https://cobnor.github.io/verlet/">
-          <h3>Verlet Physics</h3>
-          <p>Physics with Verlet integration in JavaScript.</p>
-        </a>
-        <a class="project-item" id="boids-btn" href="https://cobnor.github.io/boids-js/">
-          <h3>Boids</h3>
-          <p>Flocking simulation running in the background right now.</p>
-        </a>
-        <a class="project-item" id="pdfextract-btn" href="https://github.com/cobnor/gw-pdf-extractor">
-          <h3>PDF analyser</h3>
-          <p>Using open-source LLMs to extract PDF data via QA and sentiment analysis.</p>
-        </a>
-        <a class="project-item" id="cellular-btn" href="https://github.com/cobnor/powder-sandbox">
-          <h3>Cellular Physics Sandbox</h3>
-          <p>Cellular automata based physics simulation, using C# and WinForms.</p>
-        </a>
-        <a class="project-item" id="raycaster-btn" href="https://github.com/cobnor/Python-Raycasting-Engine">
-          <h3>Raycaster</h3>
-          <p>Pseudo-3D raycaster in written in Python.</p>
-        </a>
-      </div>
-    </section>
-  </main>
+    <main>
+      <section id="intro">
+        <h1 id="name">
+          <a href="https://github.com/cobnor" target="_blank">
+            <span id="letter1">C</span>
+            <span id="letter2">o</span>
+            <span id="letter3">n</span>
+            <span id="letter4">n</span>
+            <span id="letter5">o</span>
+            <span id="letter6">r</span>
+            <span id="letter7">&nbsp</span>
+            <span id="letter8">S</span>
+            <span id="letter9">t</span>
+            <span id="letter10">e</span>
+            <span id="letter11">v</span>
+            <span id="letter12">e</span>
+            <span id="letter13">n</span>
+            <span id="letter14">s</span>
+          </a>
+        </h1> 
+        <p id="bio">Welcome to my portfolio. I'm a creative programmer studying Computer Science & Philosophy at Oxford, interested in AI safety.</p>
+        <div class="scroll-down">
+          <div class="arrow"></div>
+        </div>
+      </section>
+      <section id="projects">
+        <h2>Projects</h2>
+        <div class="project-grid">
+          
+          <a class="project-item" id="datdp-btn" href="https://www.researchgate.net/publication/388555790_Defense_Against_the_Dark_Prompts_Mitigating_Best-of-N_Jailbreaking_with_Prompt_Evaluation">
+            <h3>Defense Against The Dark Prompts</h3>
+            <p>Mitigating Best-of-N Jailbreaking with prompt evaluation.</p>
+          </a>
+          <a class="project-item" id="microbit-btn" href="https://microbit-data-visualisation.pages.dev/">
+            <h3>micro:bit data visualisation</h3>
+            <p>Web app which allows visualisation of data logged to a micro:bit.</p>
+          </a>
+          <a class="project-item" id="verlet-btn" href="https://cobnor.github.io/verlet/">
+            <h3>Verlet Physics</h3>
+            <p>Physics with Verlet integration in JavaScript.</p>
+          </a>
+          <a class="project-item" id="boids-btn" href="https://cobnor.github.io/boids-js/">
+            <h3>Boids</h3>
+            <p>Flocking simulation running in the background right now.</p>
+          </a>
+
+          <a class="project-item" id="pdfextract-btn" href="https://github.com/cobnor/gw-pdf-extractor">
+            <h3>PDF analyser</h3>
+            <p>Using open-source LLMs to extract PDF data via QA and sentiment analysis.</p>
+          </a>
+          <a class="project-item" id="cellular-btn" href="https://github.com/cobnor/powder-sandbox">
+            <h3>Cellular Physics Sandbox</h3>
+            <p>Cellular automata based physics simulation, using C# and WinForms.</p>
+          </a>
+          <a class="project-item" id="raycaster-btn" href="https://github.com/cobnor/Python-Raycasting-Engine">
+            <h3>Raycaster</h3>
+            <p>Pseudo-3D raycaster in written in Python.</p>
+          </a>
+          
+        </div>
+      </section>
+    </main>
+
 </body>
 </html>
