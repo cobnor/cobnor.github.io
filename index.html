@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Connor Stevens</title>
+
+  <!-- Google fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
+  <!-- Your styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="frame">
+    <nav class="site-nav">
+      <h1 class="site-title">Connor Stevens</h1>
+      <ul>
+        <li><a href="#" id="projects-link">projects</a></li>
+        <li><a href="#" id="about-link">about</a></li>
+        <li><a href="#" id="contact-link">contact</a></li>
+      </ul>
+
+      <!-- Submenu: Projects (dynamically populated) -->
+      <div class="submenu" id="projects-menu"></div>
+
+      <!-- Submenu: About -->
+      <div class="submenu" id="about-menu">
+        <p>Studying Computer Science & Philosophy at the University of Oxford.</p>
+      </div>
+
+      <!-- Submenu: Contact -->
+      <div class="submenu" id="contact-menu">
+        <ul>
+          <li><a href="mailto:connor.stevens@lmh.ox.ac.uk">Email</a></li>
+          <li><a href="https://www.linkedin.com/in/connor-stevens-19876b333/">LinkedIn</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <canvas id="mainCanvas"></canvas>
+
+  </div>
+
+
+  <script type="module" src="main.js"></script>
+  <script src="nav.js"></script>
+
+</body>
+</html>
