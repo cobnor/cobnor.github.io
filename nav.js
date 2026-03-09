@@ -14,13 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
     contact:  { link: contactLink,  menu: contactMenu,  className: 'submenu-open-contact' }
   };
 
-  // Dummy project data
   const projects = [
-    { name: 'Particle Pointillism', url: 'https://cobnor.github.io/particle-pointillism/' },
+    { name: 'Software Rasteriser', url: 'https://www.example.com' },
     { name: 'LLM Jailbreaking Defense Paper', url: 'https://www.researchgate.net/publication/388555790_Defense_Against_the_Dark_Prompts_Mitigating_Best-of-N_Jailbreaking_with_Prompt_Evaluation' },
     { name: 'micro:bit data visualisation', url: 'https://microbit-data-visualisation.pages.dev/' },
     { name: 'Verlet Physics', url: 'https://cobnor.github.io/verlet/' },
-    { name: 'Boids', url: 'https://cobnor.github.io/boids-js/' },
+    { name: 'Boids', url: 'https://cobnor.github.io/verlet/' },
     { name: 'PDF QA Analyser', url: 'https://github.com/cobnor/gw-pdf-extractor' },
     { name: 'Cellular Physics Sandbox', url: 'https://github.com/cobnor/powder-sandbox' },
     { name: 'Raycaster', url: 'https://github.com/cobnor/Python-Raycasting-Engine' },
@@ -57,4 +56,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
-

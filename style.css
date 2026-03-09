@@ -4,7 +4,7 @@ html, body {
 }
 body {
   background: #0A0A0A;
-  font-family: 'Crimson Text', serif;
+  font-family: 'Crimson Text';
   font-weight: 200;
   position: relative;
 
@@ -15,8 +15,9 @@ body {
 
 
 h1{
-  font-family: "Crimson Text";
-  font-weight: 100;
+  font-family: "Mona Sans";
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .frame{
