@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const projects = [
+    { name: 'Mitigating Best-of-N Jailbreaking with Prompt Evaluation', url: 'https://arxiv.org/abs/2502.00580' },
     { name: 'Particle Pointillism', url: 'https://cobnor.github.io/particle-pointillism/' },
-    { name: 'LLM Jailbreaking Defense Paper', url: 'https://www.researchgate.net/publication/388555790_Defense_Against_the_Dark_Prompts_Mitigating_Best-of-N_Jailbreaking_with_Prompt_Evaluation' },
     { name: 'micro:bit data visualisation', url: 'https://microbit-data-visualisation.pages.dev/' },
     { name: 'Verlet Physics', url: 'https://cobnor.github.io/verlet/' },
     { name: 'Boids', url: 'https://cobnor.github.io/verlet/' },
