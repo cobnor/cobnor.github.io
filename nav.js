@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { name: 'Particle Pointillism', url: 'https://cobnor.github.io/particle-pointillism/' },
     { name: 'micro:bit data visualisation', url: 'https://microbit-data-visualisation.pages.dev/' },
     { name: 'Verlet Physics', url: 'https://cobnor.github.io/verlet/' },
-    { name: 'Boids', url: 'https://cobnor.github.io/verlet/' },
+    { name: 'Boids', url: 'https://cobnor.github.io/boids-js/' },
     { name: 'PDF QA Analyser', url: 'https://github.com/cobnor/gw-pdf-extractor' },
     { name: 'Cellular Physics Sandbox', url: 'https://github.com/cobnor/powder-sandbox' },
     { name: 'Raycaster', url: 'https://github.com/cobnor/Python-Raycasting-Engine' },
