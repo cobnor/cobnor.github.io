@@ -1,66 +1,33 @@
-import { vec2, vec3, vec4, mat4 } from 'https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js';
+// Pointillist software rasteriser.
+// Each visible triangle is drawn as a handful of Phong-shaded points placed
+// at precomputed Halton barycentric coordinates.
 
-const mvpMatrix = mat4.create();
-const tempClip = new Float32Array(4);
-const projectedVertices = [], visibleTriangles = [];
-
-let depthBuffer = null;
-let lastCanvasWidth = -1, lastCanvasHeight = -1;
-
-// Constants
+// Camera / projection
 const FOVY = Math.PI / 6;
-const NEAR_PLANE = 0.1;
-const FAR_PLANE = 100.0;
+const F = 1 / Math.tan(FOVY / 2);
 const CULLING_EPSILON = 1e-7;
-const ROTATION_SPEED = 0.005;
+
+// Model placement: translate, then spin about Y
+const MODEL_OFFSET = [0, -20, -320];
+const ROTATION_SPEED = 0.3; // radians per second
 
 // Pointillist controls
-const POINT_DENSITY = 0.2;          // points per pixel‑area
-const MAX_SAMPLES = 64;              // precomputed per triangle
+const POINT_DENSITY = 0.2; // points per pixel-area
+const MAX_SAMPLES = 64;    // max points per triangle
 
-// Matrices
-const projectionMatrix = mat4.create();
-const modelMatrix      = mat4.create();
-const viewMatrix       = mat4.create();
-const normalMatrix     = mat4.create();
-const modelViewMatrix  = mat4.create();
+// Lighting (camera sits at the origin)
+const LIGHT = [50, -50, -200];
+const MODEL_COLOUR = 100 / 255;
+const DIFFUSE = 0.8;
+const SPECULAR = 0.6;
+const SHININESS = 1;
+const MIN_CHANNEL = 8;
 
-mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, -20, -320));
-mat4.identity(viewMatrix);
-
-// Model data
-let currentModelTris = [];
-let sampleBary = [];  // sampleBary[triIndex] = array of {u,v}
-
-// Lights & materials
-const lightPositions = [[50, -50, -200]];
-const cameraPosition = [0,0,0];
-const ambientColour   = [1,1,1];
-const diffuseColours  = [[1,1,1]];
-const specularColours = [[1,1,1]];
-const ambientReflection  = 0.0;
-const diffuseReflection  = 0.8;
-const specularReflection = 0.6;
-const shininess          = 1;
-const baseAmbientColour = ambientColour.map(c => c * ambientReflection);
-
-// Buffers
-let vertexBuffer, normalBuffer, colourBuffer, indexBuffer;
-
-// Temp storage
-const tempWorldPos    = vec4.create();
-const tempWorldNormal = vec3.create();
-const worldPos        = new Float32Array(3);
-const worldNormal     = new Float32Array(3);
-const dirToCamera     = new Float32Array(3);
-const lightDir        = new Float32Array(3);
-const reflectionVec   = new Float32Array(3);
-
-/**
- * Halton sequence, index>=1, base>=2
- */
+// Halton (2,3) samples folded into the unit triangle, shared by all triangles
+const sampleU = new Float32Array(MAX_SAMPLES);
+const sampleV = new Float32Array(MAX_SAMPLES);
 function halton(index, base) {
-  let result = 0, f = 1/ base, i = index;
+  let result = 0, f = 1 / base, i = index;
   while (i > 0) {
     result += f * (i % base);
     i = Math.floor(i / base);
@@ -68,250 +35,197 @@ function halton(index, base) {
   }
   return result;
 }
-
-export function initializeModelData(triangles) {
-  currentModelTris = triangles || [];
-  sampleBary.length = 0;
-
-  if (!currentModelTris.length) return;
-
-  // precompute barycentric samples per triangle
-  for (let t = 0; t < currentModelTris.length; t++) {
-    const arr = [];
-    for (let s = 1; s <= MAX_SAMPLES; s++) {
-      let u = halton(s,2), v = halton(s,3);
-      if (u + v > 1) { u = 1 - u; v = 1 - v; }
-      arr.push({u,v});
-    }
-    sampleBary.push(arr);
-  }
-
-  // flatten into buffers
-  const vCount = currentModelTris.length * 3;
-  vertexBuffer = new Float32Array(vCount * 4);
-  normalBuffer = new Float32Array(vCount * 4);
-  colourBuffer = new Float32Array(currentModelTris.length * 3);
-  indexBuffer  = new Uint32Array(currentModelTris.length * 3);
-
-  let vi=0, ni=0, ci=0, ii=0;
-  for (let t = 0; t < currentModelTris.length; t++) {
-    const tri = currentModelTris[t];
-    // A, B, C
-    [tri.a,tri.b,tri.c].forEach(v => {
-      vertexBuffer[vi++] = v[0]; vertexBuffer[vi++] = v[1];
-      vertexBuffer[vi++] = v[2]; vertexBuffer[vi++] = v[3]||1;
-    });
-    // Normals
-    [tri.aNorm||[1,1,1,0],tri.bNorm||[1,1,1,0],tri.cNorm||[1,1,1,0]]
-      .forEach(n => { normalBuffer[ni++]=n[0]; normalBuffer[ni++]=n[1];
-                      normalBuffer[ni++]=n[2]; normalBuffer[ni++]=n[3]; });
-    // Colour
-    colourBuffer[ci++] = tri.colour[0]/255;
-    colourBuffer[ci++] = tri.colour[1]/255;
-    colourBuffer[ci++] = tri.colour[2]/255;
-    // Indices
-    ii = t*3;
-    indexBuffer[ii  ] = ii;
-    indexBuffer[ii+1] = ii+1;
-    indexBuffer[ii+2] = ii+2;
-  }
+for (let s = 0; s < MAX_SAMPLES; s++) {
+  let u = halton(s + 1, 2), v = halton(s + 1, 3);
+  if (u + v > 1) { u = 1 - u; v = 1 - v; }
+  sampleU[s] = u;
+  sampleV[s] = v;
 }
 
-export function updateProjectionMatrix(w,h) {
-  const aspect = w===0||h===0 ? 1 : w/h;
-  mat4.perspective(projectionMatrix, FOVY, aspect, NEAR_PLANE, FAR_PLANE);
-  if (w !== lastCanvasWidth || h !== lastCanvasHeight) {
-    depthBuffer = (w>0&&h>0) ? new Float32Array(w*h) : null;
-    lastCanvasWidth = w; lastCanvasHeight = h;
-  }
-}
+// Model data
+let mesh = null;
+let triCount = 0;
+let vertNormals = null; // one normal per triangle corner
 
-function batchTransformVertices() {
-  if (!vertexBuffer) return [];
-  mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
-  mat4.multiply(mvpMatrix, projectionMatrix, modelViewMatrix);
-  mat4.invert(normalMatrix, modelMatrix);
-  mat4.transpose(normalMatrix, normalMatrix);
+// Per-frame buffers (one entry per unique position / corner normal)
+let worldPos, worldNorm, screenX, screenY, screenW;
 
-  projectedVertices.length = 0;
-  const vc = vertexBuffer.length/4;
-  for (let i=0; i<vc; i++) {
-    const base = i*4;
-    tempClip[0]=vertexBuffer[base];
-    tempClip[1]=vertexBuffer[base+1];
-    tempClip[2]=vertexBuffer[base+2];
-    tempClip[3]=vertexBuffer[base+3];
-    vec4.transformMat4(tempClip, tempClip, mvpMatrix);
-    const w = tempClip[3];
-    if (w>1e-5) {
-      const invW = 1/w;
-      projectedVertices.push({
-        x: tempClip[0]*invW*0.5,
-        y: tempClip[1]*invW*-0.5,
-        z: w, valid:true
-      });
-    } else projectedVertices.push({valid:false});
-  }
-  return projectedVertices;
-}
+// Viewport
+let width = 0, height = 0, aspect = 1;
+let depthBuffer = null;
 
-function phongIllumination(wP, wN, triCol) {
-  let r=baseAmbientColour[0]*triCol[0],
-      g=baseAmbientColour[1]*triCol[1],
-      b=baseAmbientColour[2]*triCol[2];
+let angle = 0;
 
-  // view dir
-  dirToCamera[0]=cameraPosition[0]-wP[0];
-  dirToCamera[1]=cameraPosition[1]-wP[1];
-  dirToCamera[2]=cameraPosition[2]-wP[2];
-  let L = Math.hypot(...dirToCamera);
-  if (L>1e-10) dirToCamera.forEach((v,i)=>dirToCamera[i]/=L);
+export function initializeModelData(data) {
+  mesh = data;
+  triCount = data.triPos.length / 3;
+  const vCount = data.positions.length / 3;
 
-  lightPositions.forEach((lightPos,i)=> {
-    // light dir
-    lightDir[0]=lightPos[0]-wP[0];
-    lightDir[1]=lightPos[1]-wP[1];
-    lightDir[2]=lightPos[2]-wP[2];
-    L = Math.hypot(...lightDir);
-    if (L>1e-10) lightDir.forEach((v,i)=>lightDir[i]/=L);
-
-    const NdotL = Math.max(0,
-      wN[0]*lightDir[0]+wN[1]*lightDir[1]+wN[2]*lightDir[2]
-    );
-    if (NdotL>0) {
-      const [dR,dG,dB] = diffuseColours[i];
-      r += diffuseReflection*NdotL*dR*triCol[0];
-      g += diffuseReflection*NdotL*dG*triCol[1];
-      b += diffuseReflection*NdotL*dB*triCol[2];
-      // spec
-      const twoNL = 2*NdotL;
-      reflectionVec[0]=twoNL*wN[0]-lightDir[0];
-      reflectionVec[1]=twoNL*wN[1]-lightDir[1];
-      reflectionVec[2]=twoNL*wN[2]-lightDir[2];
-      const RdotV = Math.max(0,
-        reflectionVec[0]*dirToCamera[0]+
-        reflectionVec[1]*dirToCamera[1]+
-        reflectionVec[2]*dirToCamera[2]
-      );
-      if (RdotV>0){
-        const specF = Math.pow(RdotV, shininess);
-        const [sR,sG,sB] = specularColours[i];
-        r += specularReflection*specF*sR;
-        g += specularReflection*specF*sG;
-        b += specularReflection*specF*sB;
+  // Resolve a normal for every triangle corner (face normal if the OBJ has none)
+  vertNormals = new Float32Array(data.triPos.length * 3);
+  for (let t = 0; t < triCount; t++) {
+    let fx = 0, fy = 0, fz = 0, haveFace = false;
+    for (let k = 0; k < 3; k++) {
+      const c = t * 3 + k;
+      const n = data.triNorm[c];
+      if (n >= 0) {
+        vertNormals[c * 3] = data.normals[n * 3];
+        vertNormals[c * 3 + 1] = data.normals[n * 3 + 1];
+        vertNormals[c * 3 + 2] = data.normals[n * 3 + 2];
+        continue;
       }
+      if (!haveFace) {
+        const p = data.positions, a = data.triPos[t * 3] * 3,
+              b = data.triPos[t * 3 + 1] * 3, cc = data.triPos[t * 3 + 2] * 3;
+        const e1x = p[b] - p[a], e1y = p[b + 1] - p[a + 1], e1z = p[b + 2] - p[a + 2];
+        const e2x = p[cc] - p[a], e2y = p[cc + 1] - p[a + 1], e2z = p[cc + 2] - p[a + 2];
+        fx = e1y * e2z - e1z * e2y;
+        fy = e1z * e2x - e1x * e2z;
+        fz = e1x * e2y - e1y * e2x;
+        haveFace = true;
+      }
+      vertNormals[c * 3] = fx;
+      vertNormals[c * 3 + 1] = fy;
+      vertNormals[c * 3 + 2] = fz;
     }
-  });
+  }
 
-  return [
-    Math.max(8,Math.min(255,r*255)),
-    Math.max(8,Math.min(255,g*255)),
-    Math.max(8,Math.min(255,b*255))
-  ];
+  worldPos = new Float32Array(vCount * 3);
+  worldNorm = new Float32Array(vertNormals.length);
+  screenX = new Float32Array(vCount);
+  screenY = new Float32Array(vCount);
+  screenW = new Float32Array(vCount);
 }
 
-function processTriangles(pv) {
-  visibleTriangles.length=0;
-  const tCount = indexBuffer.length/3;
-  for (let t=0; t<tCount; t++) {
-    const i0=indexBuffer[3*t], i1=indexBuffer[3*t+1], i2=indexBuffer[3*t+2];
-    const vA=pv[i0], vB=pv[i1], vC=pv[i2];
-    if (!vA.valid||!vB.valid||!vC.valid) continue;
-    // backface
-    const ex1=vB.x-vA.x, ey1=vB.y-vA.y,
-          ex2=vC.x-vA.x, ey2=vC.y-vA.y;
-    const area2 = ex1*ey2 - ey1*ex2;
-    if (area2 >= -CULLING_EPSILON) continue;
-    // bounds
-    if (Math.min(vA.x,vB.x,vC.x)>0.5 ||
-        Math.max(vA.x,vB.x,vC.x)<-0.5 ||
-        Math.min(vA.y,vB.y,vC.y)>0.5 ||
-        Math.max(vA.y,vB.y,vC.y)<-0.5) continue;
-    visibleTriangles.push({vA,vB,vC, triIndex: t});
+export function updateProjectionMatrix(w, h) {
+  aspect = w === 0 || h === 0 ? 1 : w / h;
+  if (w !== width || h !== height) {
+    depthBuffer = w > 0 && h > 0 ? new Float32Array(w * h) : null;
+    width = w;
+    height = h;
   }
-  return visibleTriangles;
+}
+
+// Rotate + translate every vertex/normal once, then project to screen space
+// (x, y in [-0.5, 0.5], w = view-space depth).
+function transformVertices() {
+  const c = Math.cos(angle), s = Math.sin(angle);
+  const [tx, ty, tz] = MODEL_OFFSET;
+  const fx = F / aspect;
+  const p = mesh.positions;
+
+  for (let i = 0, j = 0; j < p.length; i++, j += 3) {
+    const x = p[j], y = p[j + 1], z = p[j + 2];
+    const wx = c * x + s * z + tx;
+    const wy = y + ty;
+    const wz = -s * x + c * z + tz;
+    worldPos[j] = wx;
+    worldPos[j + 1] = wy;
+    worldPos[j + 2] = wz;
+
+    const w = -wz;
+    screenW[i] = w;
+    if (w > 1e-5) {
+      screenX[i] = fx * wx / w * 0.5;
+      screenY[i] = -F * wy / w * 0.5;
+    }
+  }
+
+  for (let j = 0; j < vertNormals.length; j += 3) {
+    const x = vertNormals[j], z = vertNormals[j + 2];
+    worldNorm[j] = c * x + s * z;
+    worldNorm[j + 1] = vertNormals[j + 1];
+    worldNorm[j + 2] = -s * x + c * z;
+  }
+}
+
+function drawTriangle(t, data) {
+  const corner = t * 3;
+  const iA = mesh.triPos[corner], iB = mesh.triPos[corner + 1], iC = mesh.triPos[corner + 2];
+  if (screenW[iA] <= 1e-5 || screenW[iB] <= 1e-5 || screenW[iC] <= 1e-5) return;
+
+  const ax = screenX[iA], ay = screenY[iA];
+  const bx = screenX[iB], by = screenY[iB];
+  const cx = screenX[iC], cy = screenY[iC];
+
+  // Backface cull
+  const cross = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+  if (cross >= -CULLING_EPSILON) return;
+
+  // Off-screen cull
+  if (Math.min(ax, bx, cx) > 0.5 || Math.max(ax, bx, cx) < -0.5 ||
+      Math.min(ay, by, cy) > 0.5 || Math.max(ay, by, cy) < -0.5) return;
+
+  const nPts = Math.min(Math.floor(Math.abs(0.5 * cross) * width * height * POINT_DENSITY), MAX_SAMPLES);
+  if (nPts <= 0) return;
+
+  const aw = screenW[iA], bw = screenW[iB], cw = screenW[iC];
+  const pA = iA * 3, pB = iB * 3, pC = iC * 3;
+  const nA = corner * 3, nB = nA + 3, nC = nA + 6;
+
+  for (let s = 0; s < nPts; s++) {
+    const u = sampleU[s], v = sampleV[s], w = 1 - u - v;
+
+    const ix = Math.floor((u * ax + v * bx + w * cx + 0.5) * width);
+    const iy = Math.floor((u * ay + v * by + w * cy + 0.5) * height);
+    if (ix < 0 || ix >= width || iy < 0 || iy >= height) continue;
+
+    const idx = iy * width + ix;
+    const depth = u * aw + v * bw + w * cw;
+    if (depthBuffer[idx] <= depth) continue;
+    depthBuffer[idx] = depth;
+
+    // Interpolated world position and normal
+    const px = u * worldPos[pA] + v * worldPos[pB] + w * worldPos[pC];
+    const py = u * worldPos[pA + 1] + v * worldPos[pB + 1] + w * worldPos[pC + 1];
+    const pz = u * worldPos[pA + 2] + v * worldPos[pB + 2] + w * worldPos[pC + 2];
+    let nx = u * worldNorm[nA] + v * worldNorm[nB] + w * worldNorm[nC];
+    let ny = u * worldNorm[nA + 1] + v * worldNorm[nB + 1] + w * worldNorm[nC + 1];
+    let nz = u * worldNorm[nA + 2] + v * worldNorm[nB + 2] + w * worldNorm[nC + 2];
+    let len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    if (len > 0) { nx /= len; ny /= len; nz /= len; }
+
+    // Phong (white light, no ambient)
+    let lx = LIGHT[0] - px, ly = LIGHT[1] - py, lz = LIGHT[2] - pz;
+    len = Math.sqrt(lx * lx + ly * ly + lz * lz);
+    if (len > 1e-10) { lx /= len; ly /= len; lz /= len; }
+
+    let shade = 0, spec = 0;
+    const NdotL = nx * lx + ny * ly + nz * lz;
+    if (NdotL > 0) {
+      shade = DIFFUSE * NdotL * MODEL_COLOUR;
+
+      let vx = -px, vy = -py, vz = -pz;
+      len = Math.sqrt(vx * vx + vy * vy + vz * vz);
+      if (len > 1e-10) { vx /= len; vy /= len; vz /= len; }
+
+      const twoNL = 2 * NdotL;
+      const RdotV = (twoNL * nx - lx) * vx + (twoNL * ny - ly) * vy + (twoNL * nz - lz) * vz;
+      if (RdotV > 0) spec = SPECULAR * Math.pow(RdotV, SHININESS);
+    }
+
+    const value = Math.max(MIN_CHANNEL, Math.min(255, (shade + spec) * 255));
+    const o = idx << 2;
+    data[o] = data[o + 1] = data[o + 2] = value;
+    data[o + 3] = 255;
+  }
 }
 
 /**
- * Point‑sample using precomputed barycentrics
+ * Advance the rotation by dt seconds and draw into imageData.
+ * Returns false if nothing could be drawn (no model / zero-size canvas).
  */
-function pointillizeTriangle(tri, data, width, height) {
-  const {vA,vB,vC,triIndex} = tri;
-  // screen area
-  const area2 = 0.5*((vB.x-vA.x)*(vC.y-vA.y)-(vB.y-vA.y)*(vC.x-vA.x));
-  const nPts = Math.min(
-    Math.floor(Math.abs(area2)*width*height*POINT_DENSITY),
-    sampleBary[triIndex].length
-  );
-  if (nPts<=0) return;
-
-  const baseI = triIndex*3;
-  const cOff  = baseI;
-  const col   = [
-    colourBuffer[cOff],
-    colourBuffer[cOff+1],
-    colourBuffer[cOff+2]
-  ];
-  const vOff4 = baseI*4;
-
-  for (let s=0; s<nPts; s++) {
-    const {u,v} = sampleBary[triIndex][s];
-    const w = 1-u-v;
-    // screen pos
-    const pxN = u*vA.x + v*vB.x + w*vC.x;
-    const pyN = u*vA.y + v*vB.y + w*vC.y;
-    const depth = u*vA.z + v*vB.z + w*vC.z;
-    const ix = Math.floor((pxN+0.5)*width),
-          iy = Math.floor((pyN+0.5)*height);
-    if (ix<0||ix>=width||iy<0||iy>=height) continue;
-    const dIdx = iy*width + ix;
-    if (depthBuffer[dIdx] <= depth) continue;
-    depthBuffer[dIdx] = depth;
-    // world pos
-    tempWorldPos[0] = u*vertexBuffer[vOff4]   + v*vertexBuffer[vOff4+4]   + w*vertexBuffer[vOff4+8];
-    tempWorldPos[1] = u*vertexBuffer[vOff4+1] + v*vertexBuffer[vOff4+5]   + w*vertexBuffer[vOff4+9];
-    tempWorldPos[2] = u*vertexBuffer[vOff4+2] + v*vertexBuffer[vOff4+6]   + w*vertexBuffer[vOff4+10];
-    tempWorldPos[3] = 1;
-    vec4.transformMat4(tempWorldPos, tempWorldPos, modelMatrix);
-    // world normal
-    tempWorldNormal[0] = u*normalBuffer[vOff4]   + v*normalBuffer[vOff4+4]   + w*normalBuffer[vOff4+8];
-    tempWorldNormal[1] = u*normalBuffer[vOff4+1] + v*normalBuffer[vOff4+5]   + w*normalBuffer[vOff4+9];
-    tempWorldNormal[2] = u*normalBuffer[vOff4+2] + v*normalBuffer[vOff4+6]   + w*normalBuffer[vOff4+10];
-    vec3.transformMat4(tempWorldNormal, tempWorldNormal, normalMatrix);
-    vec3.normalize(tempWorldNormal, tempWorldNormal);
-    // shade
-    const [r,g,b] = phongIllumination(
-      [tempWorldPos[0],tempWorldPos[1],tempWorldPos[2]],
-      tempWorldNormal,
-      col
-    );
-    const pixOff = (iy*width + ix)<<2;
-    data[pixOff  ] = r;
-    data[pixOff+1] = g;
-    data[pixOff+2] = b;
-    data[pixOff+3] = 255;
-  }
-}
-
-export function renderScene(imageData, width, height) {
-  if (!vertexBuffer || !depthBuffer ||
-      width !== lastCanvasWidth || height !== lastCanvasHeight) {
-    // clear
-    const d = imageData.data;
-    for (let i=0;i<d.length;i+=4) {
-      d[i]=d[i+1]=d[i+2]=0; d[i+3]=255;
-    }
-    return;
-  }
-  depthBuffer.fill(Infinity);
+export function renderScene(imageData, dt) {
   const data = imageData.data;
-  for (let i=0;i<data.length;i+=4) data[i+3]=0;
+  new Uint32Array(data.buffer).fill(0);
+  if (!mesh || !depthBuffer || imageData.width !== width || imageData.height !== height) {
+    return false;
+  }
 
-  mat4.rotateY(modelMatrix, modelMatrix, ROTATION_SPEED);
+  depthBuffer.fill(Infinity);
+  angle += ROTATION_SPEED * dt;
 
-  const pv = batchTransformVertices();
-  if (!pv.length) return;
-  const tris = processTriangles(pv);
-  if (!tris.length) return;
-  for (const tri of tris) pointillizeTriangle(tri, data, width, height);
+  transformVertices();
+  for (let t = 0; t < triCount; t++) drawTriangle(t, data);
+  return true;
 }
