@@ -2,15 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Connor Stevens</title>
+  <meta name="description" content="Connor Stevens — Computer Science & Philosophy at the University of Oxford. Projects, about and contact." />
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta property="og:title" content="Connor Stevens" />
+  <meta property="og:description" content="Computer Science & Philosophy at the University of Oxford." />
+  <meta property="og:type" content="website" />
 
-  <!-- Google fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@300;400;600&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+  <!-- Start fetching the model before the scripts ask for it -->
+  <link rel="preload" href="assets/lucy_extradecimated.obj" as="fetch" crossorigin />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Mona+Sans:wght@600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -18,35 +23,42 @@
     <nav class="site-nav">
       <h1 class="site-title">Connor Stevens</h1>
       <ul>
-        <li><a href="#" id="projects-link">projects</a></li>
-        <li><a href="#" id="about-link">about</a></li>
-        <li><a href="#" id="contact-link">contact</a></li>
+        <li><button type="button" id="projects-link" data-menu="projects" aria-expanded="false" aria-controls="projects-menu">projects</button></li>
+        <li><button type="button" id="about-link" data-menu="about" aria-expanded="false" aria-controls="about-menu">about</button></li>
+        <li><button type="button" id="contact-link" data-menu="contact" aria-expanded="false" aria-controls="contact-menu">contact</button></li>
       </ul>
 
-      <!-- Submenu: Projects (dynamically populated) -->
-      <div class="submenu" id="projects-menu"></div>
-
-      <!-- Submenu: About -->
-      <div class="submenu" id="about-menu">
-        <p>Studying Computer Science & Philosophy at the University of Oxford.</p>
+      <div class="submenu" id="projects-menu">
+        <ul>
+          <li><a href="https://arxiv.org/abs/2502.00580" target="_blank" rel="noopener">Mitigating Best-of-N Jailbreaking with Prompt Evaluation</a></li>
+          <li><a href="https://cobnor.github.io/particle-pointillism/" target="_blank" rel="noopener">Particle Pointillism</a></li>
+          <li><a href="https://microbit-data-visualisation.pages.dev/" target="_blank" rel="noopener">micro:bit data visualisation</a></li>
+          <li><a href="https://cobnor.github.io/verlet/" target="_blank" rel="noopener">Verlet Physics</a></li>
+          <li><a href="https://cobnor.github.io/boids-js/" target="_blank" rel="noopener">Boids</a></li>
+          <li><a href="https://github.com/cobnor/gw-pdf-extractor" target="_blank" rel="noopener">PDF QA Analyser</a></li>
+          <li><a href="https://github.com/cobnor/powder-sandbox" target="_blank" rel="noopener">Cellular Physics Sandbox</a></li>
+          <li><a href="https://github.com/cobnor/Python-Raycasting-Engine" target="_blank" rel="noopener">Raycaster</a></li>
+        </ul>
       </div>
 
-      <!-- Submenu: Contact -->
+      <div class="submenu" id="about-menu">
+        <p>Studying Computer Science &amp; Philosophy at the University of Oxford.</p>
+      </div>
+
       <div class="submenu" id="contact-menu">
         <ul>
           <li><a href="mailto:connor.stevens@lmh.ox.ac.uk">Email</a></li>
-          <li><a href="https://www.linkedin.com/in/connor-stevens-19876b333/">LinkedIn</a></li>
+          <li><a href="https://www.linkedin.com/in/connor-stevens-19876b333/" target="_blank" rel="noopener">LinkedIn</a></li>
         </ul>
       </div>
     </nav>
 
-    <canvas id="mainCanvas"></canvas>
+    <canvas id="mainCanvas" aria-hidden="true"></canvas>
 
+    <div class="loader" id="loader" role="status">loading</div>
   </div>
 
-
   <script type="module" src="main.js"></script>
-  <script src="nav.js"></script>
-
+  <script src="nav.js" defer></script>
 </body>
 </html>
