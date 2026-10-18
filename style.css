@@ -160,6 +160,7 @@ canvas {
 
 /* Show the open submenu, dimmed to match the inactive links */
 .site-nav.submenu-open-projects #projects-menu,
+.site-nav.submenu-open-essays #essays-menu,
 .site-nav.submenu-open-about #about-menu,
 .site-nav.submenu-open-contact #contact-menu {
   opacity: 0.6;
